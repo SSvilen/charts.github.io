@@ -211,26 +211,7 @@ data:
             stsPreload: true
             stsSeconds: 15552000
             customFrameOptionsValue: SAMEORIGIN
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: traefik-dashboard-auth
-  namespace: traefik
-data:
-  users: |2
-    YWRtaW46JGFwcjEkcXczQXdCYjQkUEJ3Lk9lbkR1dTBrMzdsT1V0Vnc4LwoK
----
-apiVersion: traefik.containo.us/v1alpha1
-kind: Middleware
-metadata:
-  name: traefik-dashboard-basicauth
-  namespace: traefik
-spec:
-  basicAuth:
-    secret: traefik-dashboard-auth            
 EOF
-
 cat << EOF > traefik-values.yaml
 additionalArguments:
   - --providers.file.filename=/data/traefik-config.yaml
@@ -277,7 +258,26 @@ logs:
 EOF
 
 helm install traefik traefik/traefik --namespace traefik -f traefik-values.yaml
-cat << EOF > traefik-ingress.yaml
+cat << EOF > post-traefik.yaml
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: traefik-dashboard-auth
+  namespace: traefik
+data:
+  users: |2
+    YWRtaW46JGFwcjEkcXczQXdCYjQkUEJ3Lk9lbkR1dTBrMzdsT1V0Vnc4LwoK
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: traefik-dashboard-basicauth
+  namespace: traefik
+spec:
+  basicAuth:
+    secret: traefik-dashboard-auth
+---
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
@@ -294,7 +294,7 @@ spec:
           namespace: traefik
       services:
         - name: api@internal
-          kind: TraefikService
+          kind: TraefikService             
 EOF
 helm install cert-manager jetstack/cert-manager --namespace cert-manager --set installCRDs=true
 helm install rancher rancher-latest/rancher --namespace cattle-system --set hostname=rke.spgo.se
