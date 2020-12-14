@@ -122,6 +122,9 @@ authentication:
 network:
     plugin: canal
 
+ingress:
+    provider: none
+
 
 ```
 
