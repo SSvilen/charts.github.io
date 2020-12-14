@@ -79,3 +79,19 @@ export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml
 kubectl get nodes
 ```
 
+## Install helm
+```
+curl https://baltocdn.com/helm/signing.asc | sudo apt-key add -
+sudo apt-get install apt-transport-https --yes
+echo "deb https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+sudo apt-get update
+sudo apt-get install helm
+```
+
+## Install MC
+````
+wget https://dl.min.io/client/mc/release/linux-amd64/mc
+mv mc /usr/local/bin
+chmod +x /usr/local/bin/mc
+
+````
