@@ -218,24 +218,38 @@ additionalArguments:
   - --metrics.prometheus=true
   - --certificatesresolvers.default.acme.tlschallenge
   - --certificatesresolvers.default.acme.email=support@vmar.se
-  - --certificatesresolvers.default.acme.storage=/certs/acme.json  
+  - --certificatesresolvers.default.acme.storage=/certs/acme.json
 ports:
+  traefik:
+    port: 9000
+    protocol: TCP
   web:
-    port: 80
+    port: 8000
+    exposed: true
+    exposedPort: 80
+    protocol: TCP
     redirectTo: websecure
   websecure:
-    port: 443
+    port: 8443
+    exposed: true
+    exposedPort: 443
+    protocol: TCP
     tls:
       enabled: true
-      certResolver: default
-  traefik:
-    port: 8080  
-ingressRoute:
-  dashboard:
-    enabled: false
-ingressClass:
+      certResolver: "default"
+service:
   enabled: true
-  isDefaultClass: true    
+  type: LoadBalancer
+rbac:
+  enabled: true
+  namespaced: false
+providers:
+  kubernetesCRD:
+    enabled: true
+  kubernetesIngress:
+    enabled: true
+podSecurityPolicy:
+  enabled: false
 persistence:
   enabled: true
   path: /certs
@@ -244,17 +258,16 @@ volumes:
   - mountPath: /data
     name: traefik-config
     type: configMap
-providers:
-  kubernetesCRD:
-    enabled: true
-  kubernetesIngress:
-    enabled: true
-logs:
-  general:
-    # By default, the level is set to ERROR. Alternative logging levels are DEBUG, PANIC, FATAL, ERROR, WARN, and INFO.
-    level: ERROR
-  access:
-    enabled: false
+securityContext:
+  capabilities:
+    drop: [ALL]
+  readOnlyRootFilesystem: true
+  runAsGroup: 65532
+  runAsNonRoot: true
+  runAsUser: 65532
+
+podSecurityContext:
+  fsGroup: 65532
 EOF
 
 helm install traefik traefik/traefik --namespace traefik -f traefik-values.yaml
