@@ -42,7 +42,7 @@ net.bridge.bridge-nf-call-iptables=1
 
 ## Download rke
 ```
-wget https://github.com/rancher/rke/releases/download/latest/rke_linux-amd64 -O /usr/local/bin/rke
+wget https://github.com/rancher/rke/releases/download/v1.2.3/rke_linux-amd64 -O /usr/local/bin/rke
 chmod +x /usr/local/bin/rke
 
 ```
