@@ -89,7 +89,7 @@ ignore_docker_version: false
 # In case the kubernetes_version and kubernetes image in
 # system_images are defined, the system_images configuration
 # will take precedence over kubernetes_version.
-kubernetes_version: v1.10.3-rancher2
+# kubernetes_version: v1.10.3-rancher2
 
 
 services:
