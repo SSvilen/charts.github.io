@@ -12,6 +12,13 @@ cat /etc/hosts
 172.18.251.45	dashboard.vks.vmar.se vks.vmar.se
 ```
 
+## create ssh-key and copy to another nodes
+```
+ssh-keygen -t rsa -b 4096
+ssh-copy-id root@localhost
+scp -r .ssh/ <nodename>:
+```
+
 
 ## Run full-upgrade
 ```
@@ -38,5 +45,37 @@ net.bridge.bridge-nf-call-iptables=1
 wget https://github.com/rancher/rke/releases/download/latest/rke_linux-amd64 -O /usr/local/bin/rke
 chmod +x /usr/local/bin/rke
 
+```
+
+## Create configfile
+```
+cat rancher-cluster.yaml
+nodes:
+  - address: <fqdn to node>
+    internal_address: <ip to node>
+    user: root
+    role: [controlplane, worker, etcd]
+  - address: <fqdn to node>
+    internal_address: <ip to node>
+    user: root
+    role: [controlplane, worker, etcd]
+  - address: <fqdn to node>
+    internal_address: <ip to node>
+    user: root
+    role: [controlplane, worker, etcd]    
+
+services:
+  etcd:
+    snapshot: true
+    creation: 6h
+    retention: 24h
+
+```
+
+## Run RKE installer
+```
+rke up --config ./rancher-cluster.yml
+export KUBECONFIG=$(pwd)/kube_config_rancher-cluster.yml
+kubectl get nodes
 ```
 
