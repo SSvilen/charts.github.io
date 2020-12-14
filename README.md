@@ -50,25 +50,78 @@ chmod +x /usr/local/bin/rke
 ## Create configfile
 ```
 cat rancher-cluster.yaml
+
 nodes:
-  - address: <fqdn to node>
-    internal_address: <ip to node>
-    user: root
-    role: [controlplane, worker, etcd]
-  - address: <fqdn to node>
-    internal_address: <ip to node>
-    user: root
-    role: [controlplane, worker, etcd]
-  - address: <fqdn to node>
-    internal_address: <ip to node>
-    user: root
-    role: [controlplane, worker, etcd]    
+    - address: k8s.spgo.local
+      internal_address: 10.255.0.11
+      user: root
+      role: [controlplane, worker, etcd]
+
+# If set to true, RKE will not fail when unsupported Docker version
+# are found
+ignore_docker_version: false
+
+# List of registry credentials
+# If you are using a Docker Hub registry, you can omit the `url`
+# or set it to `docker.io`
+# is_default set to `true` will override the system default
+# registry set in the global settings
+# private_registries:
+#      - url: registry.com
+#        user: Username
+#        password: password
+#        is_default: true
+
+# Set the clustername
+# cluster_name: cluster
+
+# The Kubernetes version used. The default versions of Kubernetes
+# are tied to specific versions of the system images.
+#
+# For RKE v0.2.x and below, the map of Kubernetes versions and their system images is
+# located here:
+# https://github.com/rancher/types/blob/release/v2.2/apis/management.cattle.io/v3/k8s_defaults.go
+#
+# For RKE v0.3.0 and above, the map of Kubernetes versions and their system images is
+# located here:
+# https://github.com/rancher/kontainer-driver-metadata/blob/master/rke/k8s_rke_system_images.go
+#
+# In case the kubernetes_version and kubernetes image in
+# system_images are defined, the system_images configuration
+# will take precedence over kubernetes_version.
+kubernetes_version: v1.10.3-rancher2
+
 
 services:
-  etcd:
-    snapshot: true
-    creation: 6h
-    retention: 24h
+    etcd:
+      snapshot: true
+      creation: 6h
+      retention: 24h
+    kubelet:
+      # Base domain for the cluster
+      cluster_domain: cluster.local
+      # Set max pods to 250 instead of default 110
+      extra_args:
+        max-pods: 250
+
+# Currently, only authentication strategy supported is x509.
+# You can optionally create additional SANs (hostnames or IPs) to
+# add to the API server PKI certificate.
+# This is useful if you want to use a load balancer for the
+# control plane servers.
+authentication:
+    strategy: x509
+    sans:
+      - "10.255.0.10"
+      - "10.255.0.11"
+      - "158.174.114.132"
+      - "rke.spgo.se"
+      - "*.spgo.se"
+
+# Specify network plugin-in (canal, calico, flannel, weave, or none)
+network:
+    plugin: canal
+
 
 ```
 
