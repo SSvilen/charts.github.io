@@ -161,3 +161,18 @@ sudo apt-get update
 sudo apt-get install -y kubectl
 
 kubectl completion bash >/etc/bash_completion.d/kubectl
+````
+
+## Add helm repos
+````
+helm repo add jetstack https://charts.jetstack.io
+helm repo add rancher-latest https://releases.rancher.com/server-charts/latest
+helm repo add bitnami https://charts.bitnami.com/bitnami
+````
+
+## Install helm stuffs
+````
+helm install metallb bitnami/metallb --namespace metallb-system
+helm install cert-manager jetstack/cert-manager --namespace cert-manager --set installCRDs=true
+helm install rancher rancher-latest/rancher --namespace cattle-system --set hostname=rke.spgo.se
+````
