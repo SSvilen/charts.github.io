@@ -310,5 +310,37 @@ spec:
           kind: TraefikService             
 EOF
 helm install cert-manager jetstack/cert-manager --namespace cert-manager --set installCRDs=true
-helm install rancher rancher-latest/rancher --namespace cattle-system --set hostname=rke.spgo.se --set ingress.tls.source=letsEncrypt --set letsEncrypt.email=support@vmar.se
+helm install rancher rancher-latest/rancher --namespace cattle-system
+cat << EOF > rancher-ingress.yaml
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: svc-rancher-headers
+  namespace: cattle-system
+spec:
+  headers:
+    customRequestHeaders:
+      X-Forwarded-Proto: "https"
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: dashboard-vks-vmar-se
+  namespace: cattle-system
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`rke.spgo.se`)
+    middlewares:
+      - name: svc-rancher-headers
+    kind: Rule
+    services:
+    - name: rancher
+      port: 80
+  tls:
+    certResolver: default
+EOF    
 ````
