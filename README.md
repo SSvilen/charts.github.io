@@ -231,7 +231,52 @@ spec:
     secret: traefik-dashboard-auth            
 EOF
 
-helm install traefik traefik/traefik --namespace traefik
+cat << EOF > traefik-values.yaml
+additionalArguments:
+  - --providers.file.filename=/data/traefik-config.yaml
+  - --metrics.prometheus=true
+  - --certificatesresolvers.default.acme.tlschallenge
+  - --certificatesresolvers.default.acme.email=support@vmar.se
+  - --certificatesresolvers.default.acme.storage=/certs/acme.json  
+ports:
+  web:
+    port: 80
+    redirectTo: websecure
+  websecure:
+    port: 443
+    tls:
+      enabled: true
+      certResolver: default
+  traefik:
+    port: 8080  
+ingressRoute:
+  dashboard:
+    enabled: false
+ingressClass:
+  enabled: true
+  isDefaultClass: true    
+persistence:
+  enabled: true
+  path: /certs
+  size: 128Mi
+volumes:
+  - mountPath: /data
+    name: traefik-config
+    type: configMap
+providers:
+  kubernetesCRD:
+    enabled: true
+  kubernetesIngress:
+    enabled: true
+logs:
+  general:
+    # By default, the level is set to ERROR. Alternative logging levels are DEBUG, PANIC, FATAL, ERROR, WARN, and INFO.
+    level: ERROR
+  access:
+    enabled: false
+EOF
+
+helm install traefik traefik/traefik --namespace traefik -f traefik-values.yaml
 cat << EOF > traefik-ingress.yaml
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
