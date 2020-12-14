@@ -213,6 +213,15 @@ data:
             customFrameOptionsValue: SAMEORIGIN
 EOF
 cat << EOF > traefik-values.yaml
+deployment:
+  enabled: true
+  initContainers:
+  - name: volume-permissions
+    image: busybox:1.31.1
+    command: ["sh", "-c", "chmod -Rv 600 /certs/*"]
+    volumeMounts:
+    - name: data
+      mountPath: /certs
 additionalArguments:
   - --providers.file.filename=/data/traefik-config.yaml
   - --metrics.prometheus=true
