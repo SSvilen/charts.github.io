@@ -310,5 +310,5 @@ spec:
           kind: TraefikService             
 EOF
 helm install cert-manager jetstack/cert-manager --namespace cert-manager --set installCRDs=true
-helm install rancher rancher-latest/rancher --namespace cattle-system --set hostname=rke.spgo.se
+helm install rancher rancher-latest/rancher --namespace cattle-system --set hostname=rke.spgo.se --set ingress.tls.source=letsEncrypt --set letsEncrypt.email=support@vmar.se
 ````
