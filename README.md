@@ -165,6 +165,7 @@ kubectl completion bash >/etc/bash_completion.d/kubectl
 
 ## Add helm repos
 ````
+helm repo add traefik https://helm.traefik.io/traefik
 helm repo add jetstack https://charts.jetstack.io
 helm repo add rancher-latest https://releases.rancher.com/server-charts/latest
 helm repo add bitnami https://charts.bitnami.com/bitnami
@@ -172,7 +173,84 @@ helm repo add bitnami https://charts.bitnami.com/bitnami
 
 ## Install helm stuffs
 ````
-helm install metallb bitnami/metallb --namespace metallb-system
+cat << EOF > metal-values.yaml
+configInline:
+  address-pools:
+  - name: default
+    protocol: layer2
+    addresses:
+    - 10.255.0.10/32
+
+prometheus:
+  enabled: true
+EOF
+helm install metallb bitnami/metallb --namespace metallb-system -f metal-values.yaml
+---
+Create username/password
+* prereq: apt-get install apache2-utils
+htpasswd -nb kangoroo jack | openssl base64
+
+cat << EOF > traefik-config.yaml 
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: traefik-config
+  namespace: traefik
+data:
+  traefik-config.yaml: |
+    http:
+      middlewares:
+        headers-default:
+          headers:
+            sslRedirect: true
+            browserXssFilter: true
+            contentTypeNosniff: true
+            forceSTSHeader: true
+            stsIncludeSubdomains: true
+            stsPreload: true
+            stsSeconds: 15552000
+            customFrameOptionsValue: SAMEORIGIN
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: traefik-dashboard-auth
+  namespace: traefik
+data:
+  users: |2
+    YWRtaW46JGFwcjEkcXczQXdCYjQkUEJ3Lk9lbkR1dTBrMzdsT1V0Vnc4LwoK
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: traefik-dashboard-basicauth
+  namespace: traefik
+spec:
+  basicAuth:
+    secret: traefik-dashboard-auth            
+EOF
+
+helm install traefik traefik/traefik --namespace traefik
+cat << EOF > traefik-ingress.yaml
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: traefik-dashboard
+  namespace: traefik
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`traefik.spgo.se`)
+      kind: Rule
+      middlewares:
+        - name: traefik-dashboard-basicauth
+          namespace: traefik
+      services:
+        - name: api@internal
+          kind: TraefikService
+EOF
 helm install cert-manager jetstack/cert-manager --namespace cert-manager --set installCRDs=true
 helm install rancher rancher-latest/rancher --namespace cattle-system --set hostname=rke.spgo.se
 ````
